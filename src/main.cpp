@@ -1,16 +1,10 @@
 #include <Arduino.h>
 
 #include "FastLED.h"
+#include "util.h"
+#include "config.h"
 
-#define LEVEL_INPUT A1
-
-const int GAUGE_LENGTH = 9;
-const int GAUGE_OFFSET = 0;
-const int STRIP_LENGTH = 24;
-
-const int SAMPLE_PERIOD = 100;
-const int BUFFER_SECONDS = 3;
-const int BUFFER_LENGTH = BUFFER_SECONDS * 1000 / SAMPLE_PERIOD;
+const int BUFFER_LENGTH = BUFFER_SECONDS * 1000 / SAMPLE_PERIOD_ms;
 
 
 CRGB colors[GAUGE_LENGTH] = {
@@ -39,7 +33,7 @@ uint16_t fuel_level() {
 
 bool do_sample() {
   uint32_t now = millis();
-  if((now - last) > SAMPLE_PERIOD) {
+  if((now - last) > SAMPLE_PERIOD_ms) {
     last = now;
     buffer[idx] = (analogRead(LEVEL_INPUT) & 0x3FF) >> 2;
     if (++idx > BUFFER_LENGTH) {
@@ -67,8 +61,8 @@ void start_up() {
 void setup() {
   memset(buffer, 0, BUFFER_LENGTH);
   FastLED.addLeds<NEOPIXEL, 0>(leds, STRIP_LENGTH);
-  FastLED.setBrightness(84);
-  analogReference(DEFAULT);
+  FastLED.setBrightness(100);
+  analogReference(INTERNAL2V56_NO_CAP);
   FastLED.showColor(CRGB::Black);
   start_up();
   for (int i = 0; i < STRIP_LENGTH; ++i) {
@@ -78,6 +72,12 @@ void setup() {
 
 bool on = true;
 void loop() {
+  if (millis() > 1 * 60UL * 1000UL) {
+    FastLED.showColor(CRGB::Black);
+    adc_disable();
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_mode();
+  }
   if (do_sample())
   {
     uint16_t fl = fuel_level();
