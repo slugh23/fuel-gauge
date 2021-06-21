@@ -10,7 +10,7 @@ const int BUFFER_LENGTH = BUFFER_SECONDS * 1000 / SAMPLE_PERIOD_ms;
 CRGB colors[GAUGE_LENGTH] = {
   CRGB::Red, CRGB::Red, CRGB::Red,
   CRGB::Yellow, CRGB::Yellow, CRGB::Yellow,
-  CRGB::Green, CRGB::Green, CRGB::Green
+  CRGB::Lime, CRGB::Lime, CRGB::Lime
   };
 
 CRGB leds[STRIP_LENGTH];
@@ -28,7 +28,16 @@ uint16_t average() {
 }
 
 uint16_t fuel_level() {
-  return average() / 26;
+  uint16_t lvl = average();
+  if (lvl > 710) return 0;
+  if (lvl > 670) return 1;
+  if (lvl > 628) return 2;
+  if (lvl > 586) return 3;
+  if (lvl > 536) return 4;
+  if (lvl > 473) return 5;
+  if (lvl > 374) return 6;
+  if (lvl > 120) return 7;
+  return 8;
 }
 
 bool do_sample() {
@@ -50,12 +59,21 @@ void start_up() {
   {
     if (do_sample()) {
       for (int l = 0; l < STRIP_LENGTH; ++l) {
-        leds[l] = ((i + l) % 2) ? CRGB::Green : CRGB::Black;
+        leds[l] = ((i + l) % 2) ? CRGB::Lime : CRGB::Black;
       }
       FastLED.show();
       ++i;
     }
   }
+  for (int l = 0; l < STRIP_LENGTH; ++l) {
+    leds[l] = CRGB::Black;
+  }
+  FastLED.show();
+}
+
+void setLED(unsigned led, CRGB value) {
+  unsigned i = (GAUGE_OFFSET + led) % STRIP_LENGTH;
+  leds[i] = value;
 }
 
 void setup() {
@@ -72,7 +90,7 @@ void setup() {
 
 bool on = true;
 void loop() {
-  if (millis() > 1 * 60UL * 1000UL) {
+  if (millis() > 180 * 60UL * 1000UL) {
     FastLED.showColor(CRGB::Black);
     adc_disable();
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -84,11 +102,12 @@ void loop() {
     if (fl > 0)
     {
       if (on) {
+
         FastLED.showColor(CRGB::Black);
         on = false;
       }
       for (unsigned i = 0; i < GAUGE_LENGTH; ++i) {
-        leds[i + GAUGE_OFFSET] = (i <= fl) ? colors[i] : CRGB::Black;
+        setLED(i, (i <= fl) ? colors[i] : CRGB::Black);
       }
       FastLED.show();
     }
