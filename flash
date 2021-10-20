@@ -1,0 +1,3 @@
+#!/bin/bash
+
+minipro -p attiny85 -w .pio/build/attiny85/firmware.hex
