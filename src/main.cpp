@@ -8,14 +8,20 @@ const int BUFFER_LENGTH = BUFFER_SECONDS * 1000 / SAMPLE_PERIOD_ms;
 
 
 CRGB colors[GAUGE_LENGTH] = {
-  CRGB::Red, CRGB::Red, CRGB::Red,
-  CRGB::Yellow, CRGB::Yellow, CRGB::Yellow,
-  CRGB::Lime, CRGB::Lime, CRGB::Lime
+  CRGB::Red,
+  CRGB::Red,
+  CRGB::Red,
+  CRGB::Yellow,
+  CRGB::Yellow,
+  CRGB::Yellow,
+  CRGB::Lime,
+  CRGB::Lime,
+  CRGB::Lime
   };
 
 CRGB leds[STRIP_LENGTH];
 
-uint8_t buffer[BUFFER_LENGTH];
+uint16_t buffer[BUFFER_LENGTH];
 int idx = 0;
 uint32_t last = 0;
 
@@ -44,7 +50,7 @@ bool do_sample() {
   uint32_t now = millis();
   if((now - last) > SAMPLE_PERIOD_ms) {
     last = now;
-    buffer[idx] = (analogRead(LEVEL_INPUT) & 0x3FF) >> 2;
+    buffer[idx] = analogRead(LEVEL_INPUT) & 0x3FF;
     if (++idx > BUFFER_LENGTH) {
       idx = 0;
     }
@@ -102,7 +108,6 @@ void loop() {
     if (fl > 0)
     {
       if (on) {
-
         FastLED.showColor(CRGB::Black);
         on = false;
       }
